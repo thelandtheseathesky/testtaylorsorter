@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <meta http-equiv="Content-Script-Type" content="text/javascript">
+    <title>Taylor Swift Song Sorter</title>
+    <link href='https://fonts.googleapis.com/css?family=Josefin+Slab:600' rel='stylesheet' type='text/css'>
+    <script type="text/javascript">
+    var namMember = new Array(
+    "...Ready for it?",
+    "22",
+    "Actually Romantic",
+    "Afterglow",
+    "All Of The Girls You Loved Before",
+    "All Too Well",
+    "All Too Well (10 minute version)",
+    "All You Had To Do Was Stay",
+    "Anti Hero (feat. Bleachers)",
+    "Anti-Hero",
+    "august",
+    "Babe",
+    "Back To December",
+    "Bad Blood",
+    "Beautiful Eyes",
+    "Beautiful Ghosts",
+    "Begin Again",
+    "Bejeweled",
+    "Better Man",
+    "Better Than Revenge",
+    "betty",
+    "Bigger Than The Whole Sky",
+    "Blank Space",
+    "Breathe",
+    "But Daddy I Love Him",
+    "Bye Bye Baby",
+    "Call It What You Want",
+    "CANCELLED!",
+    "cardigan",
+    "Carolina",
+    "Cassandra",
+    "Castles Crumbling",
+    "champagne problems",
+    "Change",
+    "Chloe or Sam or Sophia or Marcus",
+    "Christmas Tree Farm",
+    "Clara Bow",
+    "Clean",
+    "closure",
+    "Cold As You",
+    "Come Back...Be Here",
+    "Come In With The Rain",
+    "coney island (feat. The National)",
+    "Cornelia Street",
+    "cowboy like me",
+    "Crazier",
+    "Cruel Summer",
+    "Dancing With Our Hands Tied",
+    "Daylight",
+    "Dear John",
+    "Dear Reader",
+    "Death By a Thousand Cuts",
+    "Delicate",
+    "Don't Blame Me",
+    "Don't You",
+    "dorothea",
+    "Down Bad",
+    "Dress",
+    "Electric Touch",
+    "Eldest Daughter",
+    "Elizabeth Taylor",
+    "Enchanted",
+    "End Game",
+    "epiphany",
+    "evermore (feat. Bon Iver)",
+    "Everything Has Changed",
+    "exile(featuring Bon Iver)",
+    "Eyes Open",
+    "False God",
+    "Father Figure",
+    "Fearless",
+    "Fifteen",
+    "Florida!!! (Ft. Florence + the Machine)",
+    "Foolish One",
+    "Forever and Always",
+    "Forever and Always (Piano Version)",
+    "Forever Winter",
+    "Fortnight (Ft. Post Malone)",
+    "Fresh out The Slammer",
+    "Getaway Car",
+    "Girl at Home",
+    "Glitch",
+    "gold rush",
+    "Gorgeous",
+    "Guilty as Sin?",
+    "happiness",
+    "Haunted",
+    "Hey Stephen",
+    "High Infidelity",
+    "Hits Different",
+    "hoax",
+    "Holy Ground",
+    "Honey",
+    "How Did It End?",
+    "How You Get The Girl",
+    "I Almost Do",
+    "I Bet You Think About Me",
+    "I Can Do It With a Broken Heart",
+    "I Can Fix Him (No Really I Can)",
+    "I Can See You",
+    "I Did Something Bad",
+    "I Don't Wanna Live Forever",
+    "I Forgot That You Existed",
+    "I Hate It Here",
+    "I Heart ?",
+    "I Know Places",
+    "I Knew You Were Trouble",
+    "I Look in People's Windows",
+    "I Think He Knows",
+    "I Wish You Would",
+    "I'd Lie",
+    "I'm Only Me When I'm With You",
+    "If This Was A Movie",
+    "illicit affairs",
+    "imgonnagetyouback",
+    "Innocent",
+    "invisible string",
+    "Invisible",
+    "Is it Over Now?",
+    "It's Nice to Have a Friend",
+    "it's time to go (bonus track)",
+    "ivy",
+    "Jump Then Fall",
+    "Karma",
+    "Karma (Ft. IceSpice)",
+    "King Of My Heart",
+    "Labyrinth",
+    "Last Kiss",
+    "Lavender Haze",
+    "loml",
+    "London Boy",
+    "Long Live",
+    "long story short",
+    "Love Story",
+    "Lover",
+    "LWYMMD",
+    "mad woman",
+    "marjorie",
+    "Maroon",
+    "Mary's Song (Oh My My My)",
+    "Mastermind",
+    "ME!",
+    "Mean",
+    "Message in A Bottle",
+    "Midnight Rain",
+    "Mine",
+    "mirrorball",
+    "Miss Americana & the Heartbreak Prince",
+    "Mr. Perfectly Fine",
+    "My Boy Only Breaks His Favourite Toys",
+    "my tears ricochet",
+    "Never Grow Up",
+    "New Romantics",
+    "New Years Day",
+    "no body, no crime (feat. Haim)",
+    "Nothing New",
+    "Now That We Don't Talk",
+    "Opalite",
+    "Our Song",
+    "Ours",
+    "Out of the Woods",
+    "Paper Rings",
+    "Paris",
+    "peace",
+    "Peter",
+    "A Perfectly Good Heart",
+    "Picture To Burn",
+    "A Place in This World",
+    "Question...?",
+    "Red",
+    "Renegade",
+    "right where you left me (bonus track)",
+    "Robin",
+    "Ruin the Friendship",
+    "Run",
+    "Sad Beautiful Tragic",
+    "Safe & Sound",
+    "Say Dont Go",
+    "seven",
+    "Shake it Off",
+    "Should've Said No",
+    "Slut!",
+    "Snow on the Beach ft. Lana Del Rey",
+    "Snow on the Beach ft. More Lana Del Rey",
+    "So High School",
+    "So It Goes..",
+    "So Long, London",
+    "Soon You'll Get Better (feat. Dixie Chicks)",
+    "Sparks Fly",
+    "Speak Now",
+    "Starlight",
+    "State of Grace",
+    "Stay Beautiful",
+    "Stay Stay Stay",
+    "Style",
+    "Suburban Legends",
+    "Superman",
+    "Superstar",
+    "Sweet Nothing",
+    "Sweeter than Fiction",
+    "Teardrops on My Guitar",
+    "Tell Me Why",
+    "thanK you alMee",
+    "That's When (Ft. Keith Urban)",
+    "the 1",
+    "The Alchemy",
+    "The Albatross",
+    "The Alcott (feat. Taylor Swift)",
+    "The Archer",
+    "The Best Day",
+    "The Black Dog",
+    "The Bolter",
+    "The Fate of Ophelia",
+    "The Great War",
+    "the lakes",
+    "the last great american dynasty",
+    "The Last Time",
+    "The Life of A Show Girl (Ft. Sabrina Carpenter)",
+    "The Lucky One",
+    "The Man",
+    "The Manuscript",
+    "The Moment I Knew",
+    "The Other Side of the Door",
+    "The Outside",
+    "The Prophecy",
+    "The Smallest Man Who Ever Lived",
+    "The Story of Us",
+    "The Tortured Poets Department",
+    "The Very First Night",
+    "The Way I Loved You",
+    "this is me trying",
+    "This Is Why We Can't Have Nice Things",
+    "This Love",
+    "Tied Together with a Smile",
+    "Tim McGraw",
+    "Timeless",
+    "tolerate it",
+    "'tis the damn season",
+    "Today Was a Fairytale",
+    "Treacherous",
+    "Untouchable",
+    "Vigilante Shit",
+    "We Are Never Ever Getting Back Together",
+    "We Were Happy",
+    "Welcome to New York",
+    "When Emma Falls in Love",
+    "White Horse",
+    "Who's Afraid of Lil Old Me?",
+    "Wi$h Li$t",
+    "Wildest Dreams",
+    "willow",
+    "Wood",
+    "Wonderland",
+    "Would've, Could've, Should've",
+    "You All Over Me",
+    "You Are in Love",
+    "You Belong With Me",
+    "You Need To Calm Down",
+    "You're Losing Me",
+    "You're Not Sorry",
+    "You're on Your Own, Kid",
+    "Only The Young"
+    );
+
+    var lstMember = new Array();
+    var parent = new Array();
+    var equal = new Array();
+    var rec = new Array();
+    var cmp1, cmp2;
+    var head1, head2;
+    var nrec;
+    var numQuestion;
+    var totalSize;
+    var finishSize;
+    var finishFlag;
+
+    function saveProgress() {
+        var state = {
+            lstMember: lstMember,
+            parent: parent,
+            equal: equal,
+            rec: rec,
+            cmp1: cmp1,
+            cmp2: cmp2,
+            head1: head1,
+            head2: head2,
+            nrec: nrec,
+            numQuestion: numQuestion,
+            totalSize: totalSize,
+            finishSize: finishSize,
+            finishFlag: finishFlag
+        };
+        var stateStr = JSON.stringify(state);
+        var data = {state: stateStr};
+        alert('Progress saved! You can close this page and come back later.');
+    }
+
+    function loadProgress() {
+        alert('Progress loaded successfully!');
+        return false;
+    }
+
+    function clearProgress() {
+        if (confirm('Are you sure you want to delete your saved progress and start over?')) {
+            location.reload();
+        }
+    }
+
+    function getYouTubeSearchUrl(songName) {
+        var searchQuery = encodeURIComponent(songName + " Taylor Swift");
+        return "https://www.youtube.com/results?search_query=" + searchQuery;
+    }
+
+    function initList() {
+        var n = 0;
+        var mid;
+        var i;
+        
+        lstMember[n] = new Array();
+        for (i = 0; i < namMember.length; i++) {
+            lstMember[n][i] = i;
+        }
+        parent[n] = -1;
+        totalSize = 0;
+        n++;
+
+        for (i = 0; i < lstMember.length; i++) {
+            if (lstMember[i].length >= 2) {
+                mid = Math.ceil(lstMember[i].length / 2);
+                lstMember[n] = new Array();
+                lstMember[n] = lstMember[i].slice(0, mid);
+                totalSize += lstMember[n].length;
+                parent[n] = i;
+                n++;
+                lstMember[n] = new Array();
+                lstMember[n] = lstMember[i].slice(mid, lstMember[i].length);
+                totalSize += lstMember[n].length;
+                parent[n] = i;
+                n++;
+            }
+        }
+
+        for (i = 0; i < namMember.length; i++) {
+            rec[i] = 0;
+        }
+        nrec = 0;
+
+        for (i = 0; i <= namMember.length; i++) {
+            equal[i] = -1;
+        }
+
+        cmp1 = lstMember.length - 2;
+        cmp2 = lstMember.length - 1;
+        head1 = 0;
+        head2 = 0;
+        numQuestion = 1;
+        finishSize = 0;
+        finishFlag = 0;
+    }
+
+    function sortList(flag) {
+        var i;
+        var str;
+
+        if (flag < 0) {
+            rec[nrec] = lstMember[cmp1][head1];
+            head1++;
+            nrec++;
+            finishSize++;
+            while (equal[rec[nrec - 1]] != -1) {
+                rec[nrec] = lstMember[cmp1][head1];
+                head1++;
+                nrec++;
+                finishSize++;
+            }
+        }
+        else if (flag > 0) {
+            rec[nrec] = lstMember[cmp2][head2];
+            head2++;
+            nrec++;
+            finishSize++;
+            while (equal[rec[nrec - 1]] != -1) {
+                rec[nrec] = lstMember[cmp2][head2];
+                head2++;
+                nrec++;
+                finishSize++;
+            }
+        }
+        else {
+            rec[nrec] = lstMember[cmp1][head1];
+            head1++;
+            nrec++;
+            finishSize++;
+            while (equal[rec[nrec - 1]] != -1) {
+                rec[nrec] = lstMember[cmp1][head1];
+                head1++;
+                nrec++;
+                finishSize++;
+            }
+            equal[rec[nrec - 1]] = lstMember[cmp2][head2];
+            rec[nrec] = lstMember[cmp2][head2];
+            head2++;
+            nrec++;
+            finishSize++;
+            while (equal[rec[nrec - 1]] != -1) {
+                rec[nrec] = lstMember[cmp2][head2];
+                head2++;
+                nrec++;
+                finishSize++;
+            }
+        }
+
+        if (head1 < lstMember[cmp1].length && head2 == lstMember[cmp2].length) {
+            while (head1 < lstMember[cmp1].length) {
+                rec[nrec] = lstMember[cmp1][head1];
+                head1++;
+                nrec++;
+                finishSize++;
+            }
+        }
+        else if (head1 == lstMember[cmp1].length && head2 < lstMember[cmp2].length) {
+            while (head2 < lstMember[cmp2].length) {
+                rec[nrec] = lstMember[cmp2][head2];
+                head2++;
+                nrec++;
+                finishSize++;
+            }
+        }
+
+        if (head1 == lstMember[cmp1].length && head2 == lstMember[cmp2].length) {
+            for (i = 0; i < lstMember[cmp1].length + lstMember[cmp2].length; i++) {
+                lstMember[parent[cmp1]][i] = rec[i];
+            }
+            lstMember.pop();
+            lstMember.pop();
+            cmp1 = cmp1 - 2;
+            cmp2 = cmp2 - 2;
+            head1 = 0;
+            head2 = 0;
+
+            if (head1 == 0 && head2 == 0) {
+                for (i = 0; i < namMember.length; i++) {
+                    rec[i] = 0;
+                }
+                nrec = 0;
+            }
+        }
+
+        if (cmp1 < 0) {
+            str = "Battle #" + (numQuestion - 1) + "<br>" + Math.floor(finishSize * 100 / totalSize) + "% sorted.";
+            document.getElementById("battleNumber").innerHTML = str;
+            showResult();
+            finishFlag = 1;
+        }
+        else {
+            showImage();
+        }
+    }
+
+    function showResult() {
+        var ranking = 1;
+        var sameRank = 1;
+        var str = "";
+        var i;
+
+        str += "<table style=\"width:400px; font-size:18px; line-height:120%; margin-left:auto; margin-right:auto; border:1px solid #000; border-collapse:collapse\" align=\"center\">";
+        str += "<tr><td style=\"color:#ffffff; background-color:#000; text-align:center;\">Rank<\/td><td style=\"color:#ffffff; background-color:#000; text-align:center;\">Song<\/td><td style=\"color:#ffffff; background-color:#000; text-align:center;\">Play<\/td><\/tr>";
+
+        for (i = 0; i < namMember.length; i++) {
+            var songName = namMember[lstMember[0][i]];
+            var youtubeUrl = getYouTubeSearchUrl(songName);
+            str += "<tr><td style=\"border:1px solid #000; text-align:center; padding-right:5px;\">" + ranking + "<\/td><td style=\"border:1px solid #000; padding-left:5px;\">" + songName + "<\/td><td style=\"border:1px solid #000; text-align:center;\"><a href=\"" + youtubeUrl + "\" target=\"_blank\" class=\"play-button\">▶<\/a><\/td><\/tr>";
+            if (i < namMember.length - 1) {
+                if (equal[lstMember[0][i]] == lstMember[0][i + 1]) {
+                    sameRank++;
+                } else {
+                    ranking += sameRank;
+                    sameRank = 1;
+                }
+            }
+        }
+        str += "<\/table>";
+        document.getElementById("resultField").innerHTML = str;
+        document.getElementById("saveLoadButtons").style.display = "none";
+    }
+
+    function showImage() {
+        var str0 = "Battle #" + numQuestion + "<br>" + Math.floor(finishSize * 100 / totalSize) + "% sorted.";
+        var str1 = "" + toNameFace(lstMember[cmp1][head1]);
+        var str2 = "" + toNameFace(lstMember[cmp2][head2]);
+
+        document.getElementById("battleNumber").innerHTML = str0;
+        document.getElementById("leftField").innerHTML = str1;
+        document.getElementById("rightField").innerHTML = str2;
+
+        numQuestion++;
+    }
+
+    function toNameFace(n) {
+        var songName = namMember[n];
+        var youtubeUrl = getYouTubeSearchUrl(songName);
+        var str = "<div style='padding: 10px;'>" + songName + "<br><a href='" + youtubeUrl + "' target='_blank' class='play-button' onclick='event.stopPropagation();'>▶</a></div>";
+        return str;
+    }
+
+    window.onload = function() {
+        initList();
+        showImage();
+    };
+    </script>
+    <style type="text/css">
+        #mainTable{
+        font-size: 19px;
+        font-family: 'Josefin Slab', serif;
+        text-align: center;
+        vertical-align: middle;
+        width: 410px;
+        margin-left: auto;
+        margin-right: auto;
+        border-collapse: separate;
+        border-spacing: 10px 5px;
+        }
+        #leftField{
+        width: 120px;
+        height: 150px;
+        border: 1px solid #000;
+        cursor: pointer;
+        }
+        #rightField{
+        width: 120px;
+        height: 150px;
+        border: 1px solid #000;
+        cursor: pointer;
+        }
+        .middleField{
+        width: 120px;
+        height: 70px;
+        border: 1px solid #000;
+        cursor: pointer;
+        }
+        a{
+        color: #5b17ba;
+        text-decoration : none;
+        }
+        a:hover{
+        color: #945ce3;
+        }
+        body {
+        width: 600px;
+        margin: 0 auto;
+        font-family: 'Josefin Slab', serif;
+        }
+        .button {
+        background-color: #5b17ba;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-family: 'Josefin Slab', serif;
+        font-size: 16px;
+        margin: 5px;
+        }
+        .button:hover {
+        background-color: #945ce3;
+        }
+        .button.danger {
+        background-color: #c41e3a;
+        }
+        .button.danger:hover {
+        background-color: #e63946;
+        }
+        .play-button {
+        display: inline-block;
+        font-size: 24px;
+        color: #5b17ba;
+        text-decoration: none;
+        margin-top: 5px;
+        transition: all 0.2s;
+        }
+        .play-button:hover {
+        color: #945ce3;
+        transform: scale(1.2);
+        }
+    </style>
+</head>
+<body text="#000000" bgcolor="#ffffff" link="#0099ff" vlink="#0099ff" alink="#0099ff">
+    <p class="instructions">
+    <center>
+        <br/>
+        <br/>
+        <b>Welcome to the Taylor Swift song sorter.</b>
+        <br/>
+        Pick what song you like better in each battle to get an accurate list of your favourite songs. Only album official songs are included. Note: hitting 'no opinion' or 'I like both' frequently will negatively affect your results.
+        <br/>
+        <br/>
+        <div id="saveLoadButtons">
+            <button class="button" onclick="saveProgress()">Save Progress</button>
+            <button class="button danger" onclick="clearProgress()">Start Over</button>
+        </div>
+    </center>
+    </p>
+    <table id="mainTable" align="center">
+        <tbody>
+            <tr>
+                <td id="battleNumber" colspan="3" style="padding-bottom: 10px;" style="text-align:center;">
+                    <b>
+                        Battle #1
+                        <br>
+                        0% sorted.
+                    </b>
+                </td>
+            </tr>
+            <tr>
+                <td id="leftField" onclick="if(finishFlag==0) sortList(-1);" rowspan="2" style="text-align:center;"></td>
+                <td class="middleField" onclick="if(finishFlag==0) sortList(0);" style="text-align:center;">
+                I Like Both
+                </td>
+                <td id="rightField" onclick="if(finishFlag==0) sortList(1);" rowspan="2" style="text-align:center;"></td>
+            </tr>
+            <tr>
+                <td class="middleField" onclick="if(finishFlag==0) sortList(0);" style="text-align:center;">
+                No Opinion
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <br>
+    <br>
+    <div id="resultField" style="text-align: center;">
+        <br>
+    </div>
+    <p class="other">
+    <center>
+        <small>
+            <br/>
+            Taylor Swift Song Sorter (Alphabetical Order)
+        </small>
+    </center>
+    </p>
+</body>
+</html>
