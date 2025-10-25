@@ -300,18 +300,42 @@
             finishSize: finishSize,
             finishFlag: finishFlag
         };
-        var stateStr = JSON.stringify(state);
-        var data = {state: stateStr};
+        localStorage.setItem('swiftSorterProgress', JSON.stringify(state));
         alert('Progress saved! You can close this page and come back later.');
     }
 
     function loadProgress() {
-        alert('Progress loaded successfully!');
+        var saved = localStorage.getItem('swiftSorterProgress');
+        if (saved) {
+            var state = JSON.parse(saved);
+            lstMember = state.lstMember;
+            parent = state.parent;
+            equal = state.equal;
+            rec = state.rec;
+            cmp1 = state.cmp1;
+            cmp2 = state.cmp2;
+            head1 = state.head1;
+            head2 = state.head2;
+            nrec = state.nrec;
+            numQuestion = state.numQuestion;
+            totalSize = state.totalSize;
+            finishSize = state.finishSize;
+            finishFlag = state.finishFlag;
+            
+            if (finishFlag == 1) {
+                showResult();
+            } else {
+                showImage();
+            }
+            alert('Progress loaded successfully!');
+            return true;
+        }
         return false;
     }
 
     function clearProgress() {
         if (confirm('Are you sure you want to delete your saved progress and start over?')) {
+            localStorage.removeItem('swiftSorterProgress');
             location.reload();
         }
     }
@@ -461,6 +485,7 @@
             document.getElementById("battleNumber").innerHTML = str;
             showResult();
             finishFlag = 1;
+            localStorage.removeItem('swiftSorterProgress');
         }
         else {
             showImage();
@@ -514,8 +539,18 @@
     }
 
     window.onload = function() {
-        initList();
-        showImage();
+        var hasSaved = localStorage.getItem('swiftSorterProgress');
+        if (hasSaved) {
+            if (confirm('Found saved progress! Would you like to continue where you left off?')) {
+                loadProgress();
+            } else {
+                initList();
+                showImage();
+            }
+        } else {
+            initList();
+            showImage();
+        }
     };
     </script>
     <style type="text/css">
