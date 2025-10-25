@@ -356,6 +356,9 @@
         for (i = 0; i < namMember.length; i++) {
             lstMember[n][i] = i;
         }
+        // RANDOMIZE THE INITIAL ORDER
+        lstMember[n].sort(() => Math.random() - 0.5);
+        
         parent[n] = -1;
         totalSize = 0;
         n++;
