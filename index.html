@@ -201,6 +201,7 @@
     "Speak Now",
     "Starlight",
     "State of Grace",
+    "State of Grace (acoustic)",
     "Stay Beautiful",
     "Stay Stay Stay",
     "Style",
@@ -302,8 +303,12 @@
             finishSize: finishSize,
             finishFlag: finishFlag
         };
-        localStorage.setItem('swiftSorterProgress', JSON.stringify(state));
-        alert('Progress saved! You can close this page and come back later.');
+        try {
+            localStorage.setItem('swiftSorterProgress', JSON.stringify(state));
+            alert('Progress saved! You can close this page and come back later.');
+        } catch (e) {
+            alert('Unable to save progress. Your browser may have storage disabled.');
+        }
     }
 
     function loadProgress() {
@@ -343,8 +348,8 @@
     }
 
     function getYouTubeSearchUrl(songName) {
-        var searchQuery = encodeURIComponent(songName + " Taylor Swift");
-        return "https://www.youtube.com/results?search_query=" + searchQuery;
+        var searchQuery = songName + " Taylor Swift";
+        return "https://www.youtube.com/results?search_query=" + encodeURIComponent(searchQuery);
     }
 
     function initList() {
@@ -356,7 +361,6 @@
         for (i = 0; i < namMember.length; i++) {
             lstMember[n][i] = i;
         }
-        // RANDOMIZE THE INITIAL ORDER
         lstMember[n].sort(() => Math.random() - 0.5);
         
         parent[n] = -1;
