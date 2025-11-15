@@ -394,23 +394,25 @@
         totalSize = 0;
         n++;
 
-        // Store the length before we start adding sublists
-        var originalLength = lstMember.length;
-        
-        for (i = 0; i < originalLength; i++) {
-            if (lstMember[i].length >= 2) {
-                mid = Math.ceil(lstMember[i].length / 2);
+        // Keep splitting until we can't split anymore
+        var currentIndex = 0;
+        while (currentIndex < lstMember.length) {
+            if (lstMember[currentIndex].length >= 2) {
+                mid = Math.ceil(lstMember[currentIndex].length / 2);
+                
                 lstMember[n] = new Array();
-                lstMember[n] = lstMember[i].slice(0, mid);
+                lstMember[n] = lstMember[currentIndex].slice(0, mid);
                 totalSize += lstMember[n].length;
-                parent[n] = i;
+                parent[n] = currentIndex;
                 n++;
+                
                 lstMember[n] = new Array();
-                lstMember[n] = lstMember[i].slice(mid, lstMember[i].length);
+                lstMember[n] = lstMember[currentIndex].slice(mid, lstMember[currentIndex].length);
                 totalSize += lstMember[n].length;
-                parent[n] = i;
+                parent[n] = currentIndex;
                 n++;
             }
+            currentIndex++;
         }
 
         for (i = 0; i < namMember.length; i++) {
