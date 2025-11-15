@@ -286,6 +286,28 @@
     var totalSize;
     var finishSize;
     var finishFlag;
+    var undoStack = new Array();
+
+    // Seeded random number generator
+    function seededRandom(seed) {
+        var x = Math.sin(seed++) * 10000;
+        return x - Math.floor(x);
+    }
+
+    // Seeded shuffle function (Fisher-Yates algorithm with seed)
+    function seededShuffle(array, seed) {
+        var currentIndex = array.length;
+        var temporaryValue, randomIndex;
+        
+        while (currentIndex !== 0) {
+            randomIndex = Math.floor(seededRandom(seed + currentIndex) * currentIndex);
+            currentIndex--;
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+        return array;
+    }
 
     function saveProgress() {
         var state = {
@@ -301,7 +323,8 @@
             numQuestion: numQuestion,
             totalSize: totalSize,
             finishSize: finishSize,
-            finishFlag: finishFlag
+            finishFlag: finishFlag,
+            undoStack: undoStack
         };
         try {
             localStorage.setItem('swiftSorterProgress', JSON.stringify(state));
@@ -328,6 +351,7 @@
             totalSize = state.totalSize;
             finishSize = state.finishSize;
             finishFlag = state.finishFlag;
+            undoStack = state.undoStack || new Array();
             
             if (finishFlag == 1) {
                 showResult();
@@ -348,7 +372,9 @@
     }
 
     function getYouTubeSearchUrl(songName) {
-        var searchQuery = songName + " Taylor Swift";
+        // Remove apostrophes and other problematic characters, then search Taylor Swift first
+        var cleanSongName = songName.replace(/['']/g, "");
+        var searchQuery = "Taylor Swift " + cleanSongName;
         return "https://www.youtube.com/results?search_query=" + encodeURIComponent(searchQuery);
     }
 
@@ -361,7 +387,8 @@
         for (i = 0; i < namMember.length; i++) {
             lstMember[n][i] = i;
         }
-        lstMember[n].sort(() => Math.random() - 0.5);
+        // Use seeded shuffle instead of random shuffle
+        seededShuffle(lstMember[n], 12345);
         
         parent[n] = -1;
         totalSize = 0;
@@ -401,7 +428,54 @@
         finishFlag = 0;
     }
 
+    function undoLastChoice() {
+        if (undoStack.length === 0) {
+            alert('Nothing to undo!');
+            return;
+        }
+        
+        var previousState = undoStack.pop();
+        lstMember = previousState.lstMember;
+        parent = previousState.parent;
+        equal = previousState.equal;
+        rec = previousState.rec;
+        cmp1 = previousState.cmp1;
+        cmp2 = previousState.cmp2;
+        head1 = previousState.head1;
+        head2 = previousState.head2;
+        nrec = previousState.nrec;
+        numQuestion = previousState.numQuestion;
+        totalSize = previousState.totalSize;
+        finishSize = previousState.finishSize;
+        finishFlag = previousState.finishFlag;
+        
+        showImage();
+    }
+
     function sortList(flag) {
+        // Save current state for undo
+        var currentState = {
+            lstMember: JSON.parse(JSON.stringify(lstMember)),
+            parent: parent.slice(),
+            equal: equal.slice(),
+            rec: rec.slice(),
+            cmp1: cmp1,
+            cmp2: cmp2,
+            head1: head1,
+            head2: head2,
+            nrec: nrec,
+            numQuestion: numQuestion,
+            totalSize: totalSize,
+            finishSize: finishSize,
+            finishFlag: finishFlag
+        };
+        undoStack.push(currentState);
+        
+        // Limit undo stack to last 10 choices to save memory
+        if (undoStack.length > 10) {
+            undoStack.shift();
+        }
+        
         var i;
         var str;
 
@@ -543,7 +617,7 @@
     function toNameFace(n) {
         var songName = namMember[n];
         var youtubeUrl = getYouTubeSearchUrl(songName);
-        var str = "<div style='padding: 10px;'>" + songName + "<br><a href='" + youtubeUrl + "' target='_blank' class='play-button' onclick='event.stopPropagation();'>▶</a></div>";
+        var str = "<div style='padding: 10px;'>" + songName + "<br><a href='" + youtubeUrl + "' target='_blank' class='play-button' onclick='event.stopPropagation();'>▶<\/a></div>";
         return str;
     }
 
@@ -645,11 +719,18 @@
         <br/>
         <b>Welcome to the Taylor Swift song sorter.</b>
         <br/>
-        Pick what song you like better in each battle to get an accurate list of your favourite songs. Only album official songs are included. Note: hitting 'no opinion' or 'I like both' frequently will negatively affect your results.
+        <br/>
+        Pick your preferred song in each battle to rank all of Taylor's songs. Note: frequently choosing 'I Like Both' or 'No Opinion' will affect result accuracy.
+        <br/>
+        <br/>
+        <b>Undo:</b> Made a mistake? Click "Undo Last Choice" to go back (up to 10 choices).
+        <br/>
+        <b>Save Progress:</b> Need a break? Click "Save Progress" to continue later from where you left off.
         <br/>
         <br/>
         <div id="saveLoadButtons">
             <button class="button" onclick="saveProgress()">Save Progress</button>
+            <button class="button" onclick="undoLastChoice()">Undo Last Choice</button>
             <button class="button danger" onclick="clearProgress()">Start Over</button>
         </div>
     </center>
@@ -688,7 +769,7 @@
     <center>
         <small>
             <br/>
-            Taylor Swift Song Sorter (Alphabetical Order)
+            Taylor Swift Complete Song Sorter
         </small>
     </center>
     </p>
