@@ -394,7 +394,10 @@
         totalSize = 0;
         n++;
 
-        for (i = 0; i < lstMember.length; i++) {
+        // Store the length before we start adding sublists
+        var originalLength = lstMember.length;
+        
+        for (i = 0; i < originalLength; i++) {
             if (lstMember[i].length >= 2) {
                 mid = Math.ceil(lstMember[i].length / 2);
                 lstMember[n] = new Array();
@@ -435,10 +438,11 @@
         }
         
         var previousState = undoStack.pop();
-        lstMember = previousState.lstMember;
-        parent = previousState.parent;
-        equal = previousState.equal;
-        rec = previousState.rec;
+        // Deep copy restoration to avoid reference issues
+        lstMember = JSON.parse(JSON.stringify(previousState.lstMember));
+        parent = JSON.parse(JSON.stringify(previousState.parent));
+        equal = JSON.parse(JSON.stringify(previousState.equal));
+        rec = JSON.parse(JSON.stringify(previousState.rec));
         cmp1 = previousState.cmp1;
         cmp2 = previousState.cmp2;
         head1 = previousState.head1;
@@ -453,12 +457,12 @@
     }
 
     function sortList(flag) {
-        // Save current state for undo
+        // Save current state for undo - DEEP COPY everything
         var currentState = {
             lstMember: JSON.parse(JSON.stringify(lstMember)),
-            parent: parent.slice(),
-            equal: equal.slice(),
-            rec: rec.slice(),
+            parent: JSON.parse(JSON.stringify(parent)),
+            equal: JSON.parse(JSON.stringify(equal)),
+            rec: JSON.parse(JSON.stringify(rec)),
             cmp1: cmp1,
             cmp2: cmp2,
             head1: head1,
