@@ -1,15 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Taylor Swift Song Sorter</title>
-<link href='https://fonts.googleapis.com/css?family=Josefin+Slab:600' rel='stylesheet'>
-
-<script>
-// ---------------------------------------------
-//  SONG LIST
-// ---------------------------------------------
-var namMember = [
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <meta http-equiv="Content-Script-Type" content="text/javascript">
+    <title>Taylor Swift Song Sorter</title>
+    <link href='https://fonts.googleapis.com/css?family=Josefin+Slab:600' rel='stylesheet' type='text/css'>
+    <script type="text/javascript">
+    var namMember = new Array(
     "...Ready for it?",
     "22",
     "Actually Romantic",
@@ -275,244 +273,495 @@ var namMember = [
     "You're Not Sorry",
     "You're on Your Own, Kid",
     "Only The Young"
-];
+    );
 
-// ------------------------------------------------
-// GLOBALS
-// ------------------------------------------------
-var mergeQueue = [];
-var lstMember = [];
-var rec = [];
-var equal = [];
-var head1, head2;
-var cmp1, cmp2;
-var finishFlag = 0;
-var numQuestion = 1;
-var finishSize = 0;
-var totalSize = 0;
+    var lstMember = new Array();
+    var parent = new Array();
+    var equal = new Array();
+    var rec = new Array();
+    var mergeQueue = new Array();
+    var currentMerge;
+    var head1, head2;
+    var nrec;
+    var numQuestion;
+    var totalSize;
+    var finishSize;
+    var finishFlag;
+    var undoStack = new Array();
 
-// ---------------------------------------------
-//  REAL FIX: BUILD A MERGE QUEUE
-// ---------------------------------------------
-function initList() {
-    mergeQueue = [];
-    lstMember = [];
-    rec = [];
-    equal = [];
-
-    // fill arrays
-    for (let i = 0; i < namMember.length; i++) {
-        rec[i] = 0;
-        equal[i] = -1;
+    function seededRandom(seed) {
+        var x = Math.sin(seed++) * 10000;
+        return x - Math.floor(x);
     }
 
-    // shuffle
-    let base = [];
-    for (let i = 0; i < namMember.length; i++) base[i] = i;
-
-    // deterministic shuffle
-    for (let i = base.length - 1; i > 0; i--) {
-        let r = Math.floor(Math.random() * (i + 1));
-        [base[i], base[r]] = [base[r], base[i]];
-    }
-
-    // build a perfect binary split tree
-    lstMember.push(base);
-
-    let queue = [0];
-
-    while (queue.length) {
-        let idx = queue.shift();
-        let arr = lstMember[idx];
-
-        if (arr.length <= 1) continue;
-
-        let mid = Math.ceil(arr.length / 2);
-
-        let left = lstMember.length;
-        lstMember.push(arr.slice(0, mid));
-
-        let right = lstMember.length;
-        lstMember.push(arr.slice(mid));
-
-        // enqueue children
-        queue.push(left);
-        queue.push(right);
-
-        // add to merge queue (child1, child2, parent)
-        mergeQueue.push([left, right, idx]);
-
-        totalSize += arr.length;
-    }
-
-    // start with last merge pair
-    mergeQueue = mergeQueue.reverse();
-
-    let first = mergeQueue[0];
-    cmp1 = first[0];
-    cmp2 = first[1];
-    head1 = 0;
-    head2 = 0;
-
-    numQuestion = 1;
-    finishSize = 0;
-    finishFlag = 0;
-}
-
-// ---------------------------------------------
-//  COMPARISON LOGIC
-// ---------------------------------------------
-function sortList(flag) {
-    let arr1 = lstMember[cmp1];
-    let arr2 = lstMember[cmp2];
-
-    if (flag < 0) {
-        rec.push(arr1[head1]);
-        head1++;
-    } else if (flag > 0) {
-        rec.push(arr2[head2]);
-        head2++;
-    } else {
-        rec.push(arr1[head1]);
-        head1++;
-        rec.push(arr2[head2]);
-        head2++;
-        equal[rec[rec.length - 2]] = rec[rec.length - 1];
-    }
-
-    finishSize++;
-
-    // if one side ends, flush the other
-    if (head1 >= arr1.length && head2 < arr2.length) {
-        while (head2 < arr2.length) {
-            rec.push(arr2[head2++]);
-            finishSize++;
+    function seededShuffle(array, seed) {
+        var currentIndex = array.length;
+        var temporaryValue, randomIndex;
+        
+        while (currentIndex !== 0) {
+            randomIndex = Math.floor(seededRandom(seed + currentIndex) * currentIndex);
+            currentIndex--;
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
         }
+        return array;
     }
-    if (head2 >= arr2.length && head1 < arr1.length) {
-        while (head1 < arr1.length) {
-            rec.push(arr1[head1++]);
-            finishSize++;
+
+    function saveProgress() {
+        var state = {
+            lstMember: lstMember,
+            parent: parent,
+            equal: equal,
+            rec: rec,
+            mergeQueue: mergeQueue,
+            currentMerge: currentMerge,
+            head1: head1,
+            head2: head2,
+            nrec: nrec,
+            numQuestion: numQuestion,
+            totalSize: totalSize,
+            finishSize: finishSize,
+            finishFlag: finishFlag,
+            undoStack: undoStack
+        };
+        try {
+            localStorage.setItem('swiftSorterProgress', JSON.stringify(state));
+            alert('Progress saved!');
+        } catch (e) {
+            alert('Unable to save.');
         }
     }
 
-    // when both lists are consumed
-    if (head1 >= arr1.length && head2 >= arr2.length) {
-        // write merged result into parent
-        let parent = mergeQueue[0][2];
-        lstMember[parent] = rec.slice();
+    function loadProgress() {
+        var saved = localStorage.getItem('swiftSorterProgress');
+        if (saved) {
+            var state = JSON.parse(saved);
+            lstMember = state.lstMember;
+            parent = state.parent;
+            equal = state.equal;
+            rec = state.rec;
+            mergeQueue = state.mergeQueue;
+            currentMerge = state.currentMerge;
+            head1 = state.head1;
+            head2 = state.head2;
+            nrec = state.nrec;
+            numQuestion = state.numQuestion;
+            totalSize = state.totalSize;
+            finishSize = state.finishSize;
+            finishFlag = state.finishFlag;
+            undoStack = state.undoStack;
+            
+            if (finishFlag == 1) {
+                showResult();
+            } else {
+                showImage();
+            }
+            alert('Progress loaded!');
+            return true;
+        }
+        return false;
+    }
 
-        // reset rec
+    function clearProgress() {
+        if (confirm('Are you sure?')) {
+            localStorage.removeItem('swiftSorterProgress');
+            location.reload();
+        }
+    }
+
+    function getYouTubeSearchUrl(songName) {
+        var cleanSongName = songName.replace(/['']/g, "");
+        var searchQuery = "Taylor Swift " + cleanSongName;
+        return "https://www.youtube.com/results?search_query=" + encodeURIComponent(searchQuery);
+    }
+
+    function initList() {
+        var i;
+        
+        lstMember = [];
+        parent = [];
+        mergeQueue = [];
+
+        var initialList = [];
+        for (i = 0; i < namMember.length; i++) {
+            initialList[i] = i;
+        }
+        seededShuffle(initialList, 12345);
+        
+        lstMember.push(initialList);
+        parent.push(-1);
+
+        totalSize = 0;
+
+        var childrenOfParent = [];
+        for (i = 0; i < 2000; i++) {
+            childrenOfParent[i] = [];
+        }
+
+        var queueIndex = 0;
+        while (queueIndex < lstMember.length) {
+            var list = lstMember[queueIndex];
+
+            if (list.length >= 2) {
+                var mid = Math.ceil(list.length / 2);
+                var left = list.slice(0, mid);
+                var right = list.slice(mid);
+
+                var leftIdx = lstMember.length;
+                lstMember.push(left);
+                parent.push(queueIndex);
+                totalSize += left.length;
+
+                var rightIdx = lstMember.length;
+                lstMember.push(right);
+                parent.push(queueIndex);
+                totalSize += right.length;
+
+                childrenOfParent[queueIndex] = [leftIdx, rightIdx];
+            }
+
+            queueIndex++;
+        }
+
+        /** 
+         * ⭐ FIX: MERGE QUEUE MUST BE BUILT IN FORWARD ORDER 
+         * Old buggy version iterated from lstMember.length - 1 down to 0.
+         */
+        for (i = 0; i < lstMember.length; i++) {
+            if (childrenOfParent[i].length === 2) {
+                mergeQueue.push({
+                    left: childrenOfParent[i][0],
+                    right: childrenOfParent[i][1],
+                    parent: i
+                });
+            }
+        }
+
         rec = [];
+        for (i = 0; i < namMember.length; i++) rec[i] = 0;
+        
+        equal = [];
+        for (i = 0; i <= namMember.length; i++) equal[i] = -1;
+        
+        nrec = 0;
 
-        // move to next merge pair
-        mergeQueue.shift();
-
-        if (mergeQueue.length === 0) {
-            finishFlag = 1;
-            showResult();
-            return;
-        }
-
-        let next = mergeQueue[0];
-        cmp1 = next[0];
-        cmp2 = next[1];
+        currentMerge = mergeQueue.pop();
         head1 = 0;
         head2 = 0;
+        numQuestion = 1;
+        finishSize = 0;
+        finishFlag = 0;
     }
 
-    showImage();
-}
-
-// ---------------------------------------------
-//  DISPLAY
-// ---------------------------------------------
-function toNameFace(n) {
-    return "<div style='padding:10px;'>" + namMember[n] + "</div>";
-}
-
-function showImage() {
-    document.getElementById("battleNumber").innerHTML =
-        "Battle #" + numQuestion + "<br>" +
-        Math.floor(finishSize * 100 / totalSize) + "% sorted.";
-
-    document.getElementById("leftField").innerHTML =
-        toNameFace(lstMember[cmp1][head1]);
-    document.getElementById("rightField").innerHTML =
-        toNameFace(lstMember[cmp2][head2]);
-
-    numQuestion++;
-}
-
-// ---------------------------------------------
-//  RESULTS
-// ---------------------------------------------
-function showResult() {
-    let final = lstMember[0];
-
-    let html = "<table style='width:400px;font-size:18px;border:1px solid #000;border-collapse:collapse;margin:auto'>";
-    html += "<tr><td style='background:#000;color:#fff;text-align:center'>Rank</td>";
-    html += "<td style='background:#000;color:#fff;text-align:center'>Song</td></tr>";
-
-    let rank = 1;
-
-    for (let i = 0; i < final.length; i++) {
-        let song = namMember[final[i]];
-
-        html += "<tr><td style='border:1px solid #000;text-align:center'>" + rank +
-            "</td><td style='border:1px solid #000;padding-left:5px'>" +
-            song + "</td></tr>";
-
-        if (i < final.length - 1 &&
-            equal[final[i]] !== final[i + 1]) {
-            rank++;
+    function undoLastChoice() {
+        if (undoStack.length === 0) {
+            alert('Nothing to undo!');
+            return;
         }
+        
+        var previousState = undoStack.pop();
+
+        lstMember = JSON.parse(JSON.stringify(previousState.lstMember));
+        parent = JSON.parse(JSON.stringify(previousState.parent));
+        equal = JSON.parse(JSON.stringify(previousState.equal));
+        rec = JSON.parse(JSON.stringify(previousState.rec));
+        mergeQueue = JSON.parse(JSON.stringify(previousState.mergeQueue));
+        currentMerge = previousState.currentMerge;
+        head1 = previousState.head1;
+        head2 = previousState.head2;
+        nrec = previousState.nrec;
+        numQuestion = previousState.numQuestion;
+        totalSize = previousState.totalSize;
+        finishSize = previousState.finishSize;
+        finishFlag = previousState.finishFlag;
+        
+        showImage();
     }
 
-    html += "</table>";
+    function sortList(flag) {
+        var currentState = {
+            lstMember: JSON.parse(JSON.stringify(lstMember)),
+            parent: JSON.parse(JSON.stringify(parent)),
+            equal: JSON.parse(JSON.stringify(equal)),
+            rec: JSON.parse(JSON.stringify(rec)),
+            mergeQueue: JSON.parse(JSON.stringify(mergeQueue)),
+            currentMerge: currentMerge,
+            head1: head1,
+            head2: head2,
+            nrec: nrec,
+            numQuestion: numQuestion,
+            totalSize: totalSize,
+            finishSize: finishSize,
+            finishFlag: finishFlag
+        };
+        undoStack.push(currentState);
+        if (undoStack.length > 10) undoStack.shift();
+        
+        var i;
+        var cmp1 = currentMerge.left;
+        var cmp2 = currentMerge.right;
 
-    document.getElementById("resultField").innerHTML = html;
-}
+        if (flag < 0) {
+            rec[nrec] = lstMember[cmp1][head1];
+            head1++;
+            nrec++;
+            finishSize++;
+            while (equal[rec[nrec - 1]] != -1) {
+                rec[nrec] = lstMember[cmp1][head1];
+                head1++; nrec++; finishSize++;
+            }
+        }
+        else if (flag > 0) {
+            rec[nrec] = lstMember[cmp2][head2];
+            head2++; nrec++; finishSize++;
+            while (equal[rec[nrec - 1]] != -1) {
+                rec[nrec] = lstMember[cmp2][head2];
+                head2++; nrec++; finishSize++;
+            }
+        }
+        else {
+            rec[nrec] = lstMember[cmp1][head1];
+            head1++; nrec++; finishSize++;
+            while (equal[rec[nrec - 1]] != -1) {
+                rec[nrec] = lstMember[cmp1][head1];
+                head1++; nrec++; finishSize++;
+            }
+            equal[rec[nrec - 1]] = lstMember[cmp2][head2];
+            rec[nrec] = lstMember[cmp2][head2];
+            head2++; nrec++; finishSize++;
+            while (equal[rec[nrec - 1]] != -1) {
+                rec[nrec] = lstMember[cmp2][head2];
+                head2++; nrec++; finishSize++;
+            }
+        }
 
-// ---------------------------------------------
-window.onload = function() {
-    initList();
-    showImage();
-};
-</script>
+        if (head1 < lstMember[cmp1].length && head2 == lstMember[cmp2].length) {
+            while (head1 < lstMember[cmp1].length) {
+                rec[nrec] = lstMember[cmp1][head1];
+                head1++; nrec++; finishSize++;
+            }
+        }
+        else if (head1 == lstMember[cmp1].length && head2 < lstMember[cmp2].length) {
+            while (head2 < lstMember[cmp2].length) {
+                rec[nrec] = lstMember[cmp2][head2];
+                head2++; nrec++; finishSize++;
+            }
+        }
 
-<style>
-body { width: 600px; margin: 0 auto; font-family: 'Josefin Slab', serif; }
-#mainTable { font-size:19px; width:410px; margin:auto; border-spacing:10px 5px; }
-#leftField, #rightField, .middleField {
-    border:1px solid #000; cursor:pointer; text-align:center;
-}
-#leftField, #rightField { width:120px; height:150px; }
-.middleField { width:120px; height:70px; }
-.button {
-    background:#5b17ba; color:white; padding:10px 20px; border:0;
-    margin:5px; border-radius:5px; cursor:pointer; font-size:16px;
-}
-.button:hover { background:#945ce3; }
-</style>
+        if (head1 == lstMember[cmp1].length && head2 == lstMember[cmp2].length) {
+            var parentIdx = currentMerge.parent;
+            for (i = 0; i < lstMember[cmp1].length + lstMember[cmp2].length; i++) {
+                lstMember[parentIdx][i] = rec[i];
+            }
+            
+            head1 = 0;
+            head2 = 0;
 
+            for (i = 0; i < namMember.length; i++) rec[i] = 0;
+            nrec = 0;
+            
+            if (mergeQueue.length > 0) {
+                currentMerge = mergeQueue.pop();
+            } else {
+                var str = "Battle #" + (numQuestion - 1) + "<br>" + Math.floor(finishSize * 100 / totalSize) + "% sorted.";
+                document.getElementById("battleNumber").innerHTML = str;
+                showResult();
+                finishFlag = 1;
+                localStorage.removeItem('swiftSorterProgress');
+                return;
+            }
+        }
+
+        showImage();
+    }
+
+    function showResult() {
+        var ranking = 1;
+        var sameRank = 1;
+        var str = "";
+        var i;
+
+        str += "<table style=\"width:400px; font-size:18px; line-height:120%; margin-left:auto; margin-right:auto; border:1px solid #000; border-collapse:collapse\" align=\"center\">";
+        str += "<tr><td style=\"color:#ffffff; background-color:#000; text-align:center;\">Rank<\/td><td style=\"color:#ffffff; background-color:#000; text-align:center;\">Song<\/td><td style=\"color:#ffffff; background-color:#000; text-align:center;\">Play<\/td><\/tr>";
+
+        for (i = 0; i < namMember.length; i++) {
+            var songName = namMember[lstMember[0][i]];
+            var youtubeUrl = getYouTubeSearchUrl(songName);
+            str += "<tr><td style=\"border:1px solid #000; text-align:center; padding-right:5px;\">" + ranking + "<\/td><td style=\"border:1px solid #000; padding-left:5px;\">" + songName + "<\/td><td style=\"border:1px solid #000; text-align:center;\"><a href=\"" + youtubeUrl + "\" target=\"_blank\" class=\"play-button\">▶<\/a><\/td><\/tr>";
+            if (i < namMember.length - 1) {
+                if (equal[lstMember[0][i]] == lstMember[0][i + 1]) {
+                    sameRank++;
+                } else {
+                    ranking += sameRank;
+                    sameRank = 1;
+                }
+            }
+        }
+        str += "<\/table>";
+        document.getElementById("resultField").innerHTML = str;
+        document.getElementById("saveLoadButtons").style.display = "none";
+    }
+
+    function showImage() {
+        var str0 = "Battle #" + numQuestion + "<br>" + Math.floor(finishSize * 100 / totalSize) + "% sorted.";
+        var str1 = "" + toNameFace(lstMember[currentMerge.left][head1]);
+        var str2 = "" + toNameFace(lstMember[currentMerge.right][head2]);
+
+        document.getElementById("battleNumber").innerHTML = str0;
+        document.getElementById("leftField").innerHTML = str1;
+        document.getElementById("rightField").innerHTML = str2;
+
+        numQuestion++;
+    }
+
+    function toNameFace(n) {
+        var songName = namMember[n];
+        var youtubeUrl = getYouTubeSearchUrl(songName);
+        var str = "<div style='padding: 10px;'>" + songName + "<br><a href='" + youtubeUrl + "' target='_blank' class='play-button' onclick='event.stopPropagation();'>▶<\/a></div>";
+        return str;
+    }
+
+    window.onload = function() {
+        var hasSaved = localStorage.getItem('swiftSorterProgress');
+        if (hasSaved) {
+            if (confirm('Found saved progress! Continue?')) {
+                loadProgress();
+            } else {
+                initList();
+                showImage();
+            }
+        } else {
+            initList();
+            showImage();
+        }
+    };
+    </script>
+
+    <style type="text/css">
+        #mainTable{
+        font-size: 19px;
+        font-family: 'Josefin Slab', serif;
+        text-align: center;
+        vertical-align: middle;
+        width: 410px;
+        margin-left: auto;
+        margin-right: auto;
+        border-collapse: separate;
+        border-spacing: 10px 5px;
+        }
+        #leftField{
+        width: 120px;
+        height: 150px;
+        border: 1px solid #000;
+        cursor: pointer;
+        }
+        #rightField{
+        width: 120px;
+        height: 150px;
+        border: 1px solid #000;
+        cursor: pointer;
+        }
+        .middleField{
+        width: 120px;
+        height: 70px;
+        border: 1px solid #000;
+        cursor: pointer;
+        }
+        a{
+        color: #5b17ba;
+        text-decoration : none;
+        }
+        a:hover{
+        color: #945ce3;
+        }
+        body {
+        width: 600px;
+        margin: 0 auto;
+        font-family: 'Josefin Slab', serif;
+        }
+        .button {
+        background-color: #5b17ba;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-family: 'Josefin Slab', serif;
+        font-size: 16px;
+        margin: 5px;
+        }
+        .button:hover {
+        background-color: #945ce3;
+        }
+        .button.danger {
+        background-color: #c41e3a;
+        }
+        .button.danger:hover {
+        background-color: #e63946;
+        }
+        .play-button {
+        display: inline-block;
+        font-size: 24px;
+        color: #5b17ba;
+        text-decoration: none;
+        margin-top: 5px;
+        transition: all 0.2s;
+        }
+        .play-button:hover {
+        color: #945ce3;
+        transform: scale(1.2);
+        }
+    </style>
 </head>
-<body>
 
-<center><br><br><b>Taylor Swift Song Sorter</b><br><br></center>
+<body text="#000000" bgcolor="#ffffff" link="#0099ff" vlink="#0099ff" alink="#0099ff">
 
-<table id="mainTable">
-    <tr><td id="battleNumber" colspan="3" style="text-align:center;"><b>Battle #1<br>0% sorted</b></td></tr>
-    <tr>
-        <td id="leftField" onclick="if(!finishFlag) sortList(-1)"></td>
-        <td class="middleField" onclick="if(!finishFlag) sortList(0)">I Like Both</td>
-        <td id="rightField" onclick="if(!finishFlag) sortList(1)"></td>
-    </tr>
-    <tr><td></td><td class="middleField" onclick="if(!finishFlag) sortList(0)">No Opinion</td><td></td></tr>
-</table>
+    <p class="instructions">
+    <center>
+        <br/><br/>
+        <b>Welcome to the Taylor Swift song sorter.</b>
+        <br/><br/>
+        Pick your preferred song in each battle to rank all of Taylor's songs.
+        <br/><br/>
+        <b>Undo:</b> Click "Undo Last Choice".
+        <br/>
+        <b>Save Progress:</b> Click "Save Progress".
+        <br/><br/>
+        <div id="saveLoadButtons">
+            <button class="button" onclick="saveProgress()">Save Progress</button>
+            <button class="button" onclick="undoLastChoice()">Undo Last Choice</button>
+            <button class="button danger" onclick="clearProgress()">Start Over</button>
+        </div>
+    </center>
+    </p>
 
-<br><br>
-<div id="resultField" style="text-align:center;"></div>
+    <table id="mainTable" align="center">
+        <tbody>
+            <tr>
+                <td id="battleNumber" colspan="3" style="padding-bottom: 10px;">
+                    <b>Battle #1<br>0% sorted.</b>
+                </td>
+            </tr>
+            <tr>
+                <td id="leftField" onclick="if(finishFlag==0) sortList(-1);" rowspan="2"></td>
+                <td class="middleField" onclick="if(finishFlag==0) sortList(0);">I Like Both</td>
+                <td id="rightField" onclick="if(finishFlag==0) sortList(1);" rowspan="2"></td>
+            </tr>
+            <tr>
+                <td class="middleField" onclick="if(finishFlag==0) sortList(0);">No Opinion</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br><br>
+    <div id="resultField" style="text-align: center;"></div>
+
+    <p class="other">
+    <center>
+        <small><br/>Taylor Swift Complete Song Sorter</small>
+    </center>
+    </p>
 
 </body>
 </html>
